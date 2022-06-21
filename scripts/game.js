@@ -1,5 +1,6 @@
 export default class Game {
-    constructor(name) {
-        this.gameName = name
+    constructor(info) {
+        this.gameId = info.id
+        this.gameName = info.name
     }
 }
