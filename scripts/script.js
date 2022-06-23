@@ -12,6 +12,7 @@
 // When assigning a matchup for a given player, check to see if they already played
 // the opponent and/or the game to be assigned. If so, come up with a way to select
 // those assignment to prevent the player from having repeat opponents and games.
+const debug = 1
 
 import Player from "./player.js"
 import Game from "./game.js"
@@ -53,35 +54,40 @@ const stubGames = [
     {id: 10, name: "Pirates of the Caribbean"}
 ]
 
+let dbSize = 1024 * 1024 * 2 // Various tutorials do it this way.
+var db = openDatabase('frenzy', '1.0', 'Database for Frenzy Tournaments', dbSize)
+db.transaction(function (tx) {   
+    tx.executeSql('CREATE TABLE IF NOT EXISTS players (id unique, name)');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS arenas (id unique, name)');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS matches (id unique, playerId, arenaId)');
+ });
+
 let activePlayers = []
 let activeGames = []
+let matches = []
 
-for (let [index, playerData] of Object.entries(stubPlayers)) {
-    activePlayers[index] = new Player(playerData)
+if (debug) {
+    for (let [index, playerData] of Object.entries(stubPlayers)) {
+        activePlayers[index] = new Player(playerData)
+    }
+
+    for (let [index, gameData] of Object.entries(stubGames)) {
+        activeGames[index] = new Game(gameData)
+    }
+} else {
+    // Load from database.
 }
-
-for (let [index, gameData] of Object.entries(stubGames)) {
-    activeGames[index] = new Game(gameData)
-}
-
 var tempPlayers = stubPlayers
 var tempGames = stubGames
 
 createMatchups()
+publishMatches()
 
 function createMatchups() {
     while (Object.keys(tempPlayers).length > 1) {
          let opponents = choosePlayers()
-
-         let arena = chooseGame()
-         $("#container").append(
-             "<p>" +
-                 "<h3><u>" + arena + "</u></h3>" +
-                 "<h4>" + opponents.player1 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'></h4>" +
-                 "vs<br>" +
-                 "<h4>" + opponents.player2 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'></h4>" +
-             "</p><hr>"
-         )
+         let arena     = chooseGame()
+         matches.push(new Matchup(opponents, arena))
     }
 }
 
@@ -142,4 +148,21 @@ function getPlayer() {
     tempPlayers.splice(index, 1)
 
     return player.name
+}
+
+function submitResult(matchId) {
+
+}
+
+function publishMatches() {
+    for (let [index, matchInfo] of Object.entries(matches)) {
+        $("#container").append(
+            "<p>" +
+                "<h3><u>" + matchInfo.arena + "</u></h3>" +
+                "<h4>" + matchInfo.opponents.player1 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${matchInfo.id})'` + "></h4>" +
+                "vs<br>" +
+                "<h4>" + matchInfo.opponents.player2 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${matchInfo.id})'` + "></h4>" +
+            "</p><hr>"
+        )
+    }
 }

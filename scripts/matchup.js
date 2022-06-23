@@ -1,7 +1,9 @@
 export default class Matchup {
-    constructor(player1, player2, game) {
-        this.firstPlayer = player1
-        this.secondPlayer = player2
-        this.matchGame = game
+    id = 0
+    constructor(players, game) {
+        this.id = this.id++
+        this.matchId   = this.id
+        this.opponents = players
+        this.arena     = game
     }
 }
