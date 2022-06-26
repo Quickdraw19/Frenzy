@@ -59,7 +59,7 @@ var db = openDatabase('frenzy', '1.0', 'Database for Frenzy Tournaments', dbSize
 db.transaction(function (tx) {   
     tx.executeSql('CREATE TABLE IF NOT EXISTS players (id unique, name)');
     tx.executeSql('CREATE TABLE IF NOT EXISTS arenas (id unique, name)');
-    tx.executeSql('CREATE TABLE IF NOT EXISTS matches (id unique, playerId, arenaId)');
+    tx.executeSql('CREATE TABLE IF NOT EXISTS matches (id unique, player1id, player2id, arenaid)');
  });
 
 let activePlayers = []
@@ -75,7 +75,17 @@ if (debug) {
         activeGames[index] = new Game(gameData)
     }
 } else {
-    // Load from database.
+    for (let [index, playerData] of Object.entries(stubPlayers)) {
+        db.transaction(function(transaction) {
+            var sql="INSERT INTO players (name) VALUES(?)";
+
+        transaction.executeSql(sql,[item,qty],function(){
+            alert("New item is added successfully");
+        },function(transaction,err){
+            alert(err.message);
+        })
+        })
+    }
 }
 var tempPlayers = stubPlayers
 var tempGames = stubGames
@@ -85,9 +95,20 @@ publishMatches()
 
 function createMatchups() {
     while (Object.keys(tempPlayers).length > 1) {
-         let opponents = choosePlayers()
-         let arena     = chooseGame()
-         matches.push(new Matchup(opponents, arena))
+        let opponents = choosePlayers()
+        let arena     = chooseGame()
+        matches.push(new Matchup(opponents, arena))
+
+        // Insert into matches table.
+        db.transaction(function(transaction) {
+            let sql = "INSERT INTO matches (player1id, player2id, arenaid) VALUES(?, ?, ?)";
+
+            transaction.executeSql(sql ,[opponents.player1.id, opponents.player2.id, arena.id], function() {
+                //alert("New item is added successfully");
+            }, function(transaction, err) {
+                //alert(err.message);
+            })
+        })
     }
 }
 
@@ -96,6 +117,24 @@ function choosePlayers() {
     let player2 = getPlayer()
 
     return {player1, player2}
+}
+
+function getPlayer() {
+    let index = Math.floor(Math.random() * Object.keys(tempPlayers).length)
+
+    if (index < 0) {
+        console.log("Bad player index")
+        return false
+    }
+
+    if (!tempPlayers[index]) {
+        index = nextValidIndex(index)
+    }
+
+    let player = tempPlayers[index]
+    tempPlayers.splice(index, 1)
+
+    return player
 }
 
 function chooseGame() {
@@ -132,37 +171,19 @@ function nextValidIndex(i) {
     return i
 }
 
-function getPlayer() {
-    let index = Math.floor(Math.random() * Object.keys(tempPlayers).length)
-
-    if (index < 0) {
-        console.log("Bad player index")
-        return false
-    }
-
-    if (!tempPlayers[index]) {
-        index = nextValidIndex(index)
-    }
-
-    let player = tempPlayers[index]
-    tempPlayers.splice(index, 1)
-
-    return player.name
-}
-
 function submitResult(matchId) {
 
 }
 
 function publishMatches() {
-    for (let [index, matchInfo] of Object.entries(matches)) {
-        $("#container").append(
-            "<p>" +
-                "<h3><u>" + matchInfo.arena + "</u></h3>" +
-                "<h4>" + matchInfo.opponents.player1 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${matchInfo.id})'` + "></h4>" +
-                "vs<br>" +
-                "<h4>" + matchInfo.opponents.player2 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${matchInfo.id})'` + "></h4>" +
-            "</p><hr>"
-        )
-    }
+    // for (let [index, matchInfo] of Object.entries(matches)) {
+    //     $("#container").append(
+    //         "<p>" +
+    //             "<h3><u>" + matchInfo.arena + "</u></h3>" +
+    //             "<h4>" + matchInfo.opponents.player1 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${matchInfo.id})'` + "></h4>" +
+    //             "vs<br>" +
+    //             "<h4>" + matchInfo.opponents.player2 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${matchInfo.id})'` + "></h4>" +
+    //         "</p><hr>"
+    //     )
+    // }
 }
