@@ -54,13 +54,16 @@ const stubGames = [
     {id: 10, name: "Pirates of the Caribbean"}
 ]
 
-let dbSize = 1024 * 1024 * 2 // Various tutorials do it this way.
-var db = openDatabase('frenzy', '1.0', 'Database for Frenzy Tournaments', dbSize)
-db.transaction(function (tx) {   
-    tx.executeSql('CREATE TABLE IF NOT EXISTS players (id unique, name)');
-    tx.executeSql('CREATE TABLE IF NOT EXISTS arenas (id unique, name)');
-    tx.executeSql('CREATE TABLE IF NOT EXISTS matches (id unique, player1id, player2id, arenaid)');
- });
+if (!debug) {
+    let dbSize = 1024 * 1024 * 2 // Various tutorials do it this way.
+    var db = openDatabase('frenzy', '1.0', 'Database for Frenzy Tournaments', dbSize)
+
+    db.transaction(function (tx) {   
+        tx.executeSql('CREATE TABLE IF NOT EXISTS players (id unique, name)');
+        tx.executeSql('CREATE TABLE IF NOT EXISTS arenas (id unique, name)');
+        tx.executeSql('CREATE TABLE IF NOT EXISTS matches (id unique, player1id, player2id, arenaid)');
+    });
+}
 
 let activePlayers = []
 let activeGames = []
@@ -100,15 +103,15 @@ function createMatchups() {
         matches.push(new Matchup(opponents, arena))
 
         // Insert into matches table.
-        db.transaction(function(transaction) {
-            let sql = "INSERT INTO matches (player1id, player2id, arenaid) VALUES(?, ?, ?)";
+        //db.transaction(function(transaction) {
+        //    let sql = "INSERT INTO matches (player1id, player2id, arenaid) VALUES(?, ?, ?)";
 
-            transaction.executeSql(sql ,[opponents.player1.id, opponents.player2.id, arena.id], function() {
+          //  transaction.executeSql(sql ,[opponents.player1.id, opponents.player2.id, arena.id], function() {
                 //alert("New item is added successfully");
-            }, function(transaction, err) {
+           // }, function(transaction, err) {
                 //alert(err.message);
-            })
-        })
+            //})
+        //})
     }
 }
 
@@ -176,14 +179,16 @@ function submitResult(matchId) {
 }
 
 function publishMatches() {
-    // for (let [index, matchInfo] of Object.entries(matches)) {
-    //     $("#container").append(
-    //         "<p>" +
-    //             "<h3><u>" + matchInfo.arena + "</u></h3>" +
-    //             "<h4>" + matchInfo.opponents.player1 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${matchInfo.id})'` + "></h4>" +
-    //             "vs<br>" +
-    //             "<h4>" + matchInfo.opponents.player2 + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${matchInfo.id})'` + "></h4>" +
-    //         "</p><hr>"
-    //     )
-    // }
-}
+    $('#match-container').html("")
+
+    for (let [index, matchInfo] of Object.entries(matches)) {
+        $("#match-container").append(
+            "<p>" +
+                "<h3><u>" + matchInfo.court + "</u></h3>" +
+                "<h4>" + matchInfo.opponents.player1.name + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${index})'` + "></h4>" +
+                "vs<br>" +
+                "<h4>" + matchInfo.opponents.player2.name + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${index})'` + "></h4>" +
+            "</p><hr>"
+        )
+    }
+  }
