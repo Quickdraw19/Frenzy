@@ -24,46 +24,39 @@ var activeGames
 var matches
 
 function startTournament() {
-    var debug = 1
+    var debug = 0
     tempPlayers   = stubPlayers()
     tempGames     = stubGames()
     activePlayers = []
     activeGames   = []
     matches       = []
 
+    for (let [index, playerData] of Object.entries(tempPlayers)) {
+        activePlayers[index] = new Player(playerData)
+    }
+
+    for (let [index, gameData] of Object.entries(tempGames)) {
+        activeGames[index] = new Game(gameData)
+    }
+
     if (!debug) {
         let dbSize = 1024 * 1024 * 2 // Various tutorials do it this way.
         var db     = openDatabase('frenzy', '1.0', 'Database for Frenzy Tournaments', dbSize)
-
+    
         db.transaction(function (tx) {   
             tx.executeSql('CREATE TABLE IF NOT EXISTS players (id unique, name)');
             tx.executeSql('CREATE TABLE IF NOT EXISTS arenas (id unique, name)');
             tx.executeSql('CREATE TABLE IF NOT EXISTS matches (id unique, player1id, player2id, arenaid)');
         });
-    }
 
-    if (debug) {
-        for (let [index, playerData] of Object.entries(stubPlayers)) {
-            activePlayers[index] = new Player(playerData)
-        }
-
-        for (let [index, gameData] of Object.entries(stubGames)) {
-            activeGames[index] = new Game(gameData)
-        }
-    } else {
-        for (let [index, playerData] of Object.entries(stubPlayers)) {
+        for (let [index, playerData] of Object.entries(activePlayers)) {
             db.transaction(function(transaction) {
-                var sql = "INSERT INTO players (name) VALUES(?)";
-
-            transaction.executeSql(sql, [item, qty],function(){
-                alert("New item is added successfully");
-            },function(transaction, err){
-                alert(err.message);
-            })
+                transaction.executeSql(`INSERT INTO players (name) VALUES(${playerData.playerName})`)
             })
         }
     }
 
+    getPlayerRecords()
     createMatchups()
     publishMatches()
 }
@@ -154,7 +147,7 @@ function publishMatches() {
             "<p>" +
                 "<h3><u>" + matchInfo.court + "</u></h3>" +
                 "<h4>" + matchInfo.opponents.player1.name + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${index}, ${matchInfo.opponents.player1.id})'` + "></h4>" +
-                "vs<br>" +
+                "<h5>vs</h5>" +
                 "<h4>" + matchInfo.opponents.player2.name + " <input class='btn btn-success btn-sm' type='submit' value='Winner'" + `onclick='submitResult(${index}, ${matchInfo.opponents.player2.id})'` + "></h4>" +
             "</p><hr>"
         )
@@ -163,8 +156,8 @@ function publishMatches() {
     $('#start-btn').html("Restart Tournament")
 }
 
-function submitResult(matchId) {
-    alert("Result Submitted!")
+function submitResult(matchId, winnerId) {
+    alert(`Result Submitted! MatchId:  ${matchId}, Winner: ${winnerId}`)
 }
 
 let stubPlayers = () => [
@@ -202,3 +195,7 @@ let stubGames = () => [
     {id: 9, name: "Nascar"},
     {id: 10, name: "Pirates of the Caribbean"}
 ]
+
+getPlayerRecords() {
+    
+}
