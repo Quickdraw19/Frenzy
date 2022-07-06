@@ -1,4 +1,4 @@
-export default class Player {
+class Player {
     constructor(info) {
         this.playerId = info.id
         this.playerName = info.name

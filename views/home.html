@@ -1,4 +1,11 @@
-<div class="tab-content">
+<script src="scripts/script.js" type="module"></script>
+<script type="module">
+    import {startTournament} from "./scripts/script.js"
+</script>
+
+<div class="tab-content">    
+    <button type="button" id="start-btn" class="btn btn-primary" onclick="startTournament()">Begin Tournament</button>
+
     <div id="match-container">
         No matches active.
     </div>
